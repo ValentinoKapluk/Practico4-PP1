@@ -1,14 +1,42 @@
 #IMPORTS
-from sqlalchemy import Integer, String, Column
-from database import Base
-
+from sqlmodel import SQLModel, Field, Relationship
+from typing import List, Optional
 #SCHEMAS
-class Producto(Base):
-    __tablename__ = "producto"
+class ProductoBase(SQLModel):
 
-    id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String)
-    tipo_de_producto = Column(String)
-    marca = Column(String)
-    precio = Column(Integer)
-    imagen = Column(String)
+    nombre: str = Field(index=True)
+    tipo_de_producto: str
+    marca_id: Optional[int] = Field(default=None, foreign_key="marca.id")
+    precio: float
+    imagen: str
+
+class Producto(ProductoBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    marca: Optional[Marca] = Relationship(back_populates="productos")
+
+class ProductoCreate(ProductoBase):
+    pass
+
+class ProductoPublic(ProductoBase):
+    id: int
+
+class ProductoPublicNested(ProductoPublic):
+    marca: Optional[MarcaPublic] = None
+
+
+class MarcaBase(SQLModel):
+    nombre: str = Field(index=True)
+    pais: str
+
+class Marca(MarcaBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    productos: List["Producto"] = Relationship(back_populates="marca")
+
+class MarcaCreate(MarcaBase):
+    pass
+
+class MarcaPublic(MarcaBase):
+    id: int
+
+class MarcaPublicNested(MarcaPublic):
+    productos: List[ProductoPublic] = []
